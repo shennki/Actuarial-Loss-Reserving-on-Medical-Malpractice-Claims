@@ -1,6 +1,6 @@
 ## Loss Reserving And Backtesting Validation On Medical Malpractice Claims
 
-An actuarial reserving engine and validation framework built for long-term Medical Malpractice (MedMal) insurance lines. This project implements standard loss development techniques alongside a backtesting framework to audit model stability and manage projection volatility in recent accident years.
+An actuarial reserving algorithm and validation framework built for long-term Medical Malpractice (MedMal) insurance lines. This project implements a chain-ladder model for loss reserving alongside a backtesting framework to test model stability and manage projection volatility in recent accident years.
 
 ##
 
