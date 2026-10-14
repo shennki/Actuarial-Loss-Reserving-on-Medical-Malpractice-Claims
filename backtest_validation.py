@@ -14,12 +14,21 @@ full_triangle = company_data.pivot(
     index="AccidentYear", columns="DevelopmentLag", values="CumPaidLoss"
 )
 
-# Choose an Evaluation Cutoff Lag
-eval_lag = 5
-truncated_triangle = full_triangle.iloc[:, :eval_lag]
+# Simulate a Diagonal Triangle Cut (Stair-step truncation)
+# Earliest year has all lags, second has n-1, ..., newest has 1 lag.
+n_rows, n_cols = full_triangle.shape
+truncated_triangle = full_triangle.copy()
 
-print(f"--- Backtesting Model for Company {company_code} ---")
-print(f"After cutting off data up to Development Lag {eval_lag}:\n")
+for r_idx in range(n_rows):
+  max_allowed_col = n_cols - r_idx
+  if max_allowed_col < n_cols:
+    truncated_triangle.iloc[r_idx, max_allowed_col:] = np.nan
+
+print(f"--- Backtesting Diagonal Triangle for Company {company_code} ---")
+print(
+    "Notice how the data forms a natural diagonal stair-step (oldest has"
+    " most data, newest has 1):\n"
+)
 print(truncated_triangle)
 
 # Run chain ladder on the TRUNCATED triangle
@@ -58,7 +67,7 @@ actual_ultimates = full_triangle.iloc[:, -1].values
 # Build a validation scorecard
 validation_df = pd.DataFrame({
     "Accident Year": full_triangle.index,
-    f"Paid at Lag {eval_lag}": latest_actuals_trunc.values,
+    "Latest Paid (At Cut)": latest_actuals_trunc.values,
     "Model Projected Ultimate": projected_ultimates,
     "Actual Ultimate (Lag 10)": actual_ultimates,
 })
@@ -72,7 +81,7 @@ validation_df["Error (%)"] = (
 
 # Format dollar columns with commas and 2 decimal places
 dollar_cols = [
-    f"Paid at Lag {eval_lag}",
+    "Latest Paid (At Cut)",
     "Model Projected Ultimate",
     "Actual Ultimate (Lag 10)",
     "Error ($)",
@@ -82,12 +91,10 @@ for col in dollar_cols:
 validation_df["Error (%)"] = validation_df["Error (%)"].map("{:,.2f}%".format)
 
 # Row-by-row print formatting
-print("\n--- Model Validation Scorecard ---")
+print("\n--- Model Validation Scorecard (Diagonal Cut) ---")
 for _, row in validation_df.iterrows():
   print(f"\nAccident Year          : {int(row['Accident Year'])}")
-  print(
-      f"Paid at Lag {eval_lag}         : {row[f'Paid at Lag {eval_lag}']}"
-  )
+  print(f"Latest Paid (At Cut)   : {row['Latest Paid (At Cut)']}")
   print(f"Model Projected Ultimate : {row['Model Projected Ultimate']}")
   print(f"Actual Ultimate (Lag 10) : {row['Actual Ultimate (Lag 10)']}")
   print(f"Error ($)                : {row['Error ($)']}")
