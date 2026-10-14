@@ -1,9 +1,9 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 df = pd.read_csv("medmal_pos_98-07.csv")
 
-# Iolsate a single company code
+# Isolate a single company code
 company_code = 683
 company_data = df[df["GRCODE"] == company_code]
 
@@ -22,21 +22,21 @@ print(f"Full Loss Triangle for Company {company_code}:")
 print(paid_triangle)
 
 # Calculate age-to-age factors
-factors=[]
+factors = []
 for i in range(paid_triangle.shape[1] - 1):
-    col_current = paid_triangle.iloc[:, i]
-    col_next = paid_triangle.iloc[:, i + 1]
+  col_current = paid_triangle.iloc[:, i]
+  col_next = paid_triangle.iloc[:, i + 1]
 
-    # Only look at rows with complete data
-    valid_data = pd.concat([col_current, col_next], axis=1).dropna()
-    sum_current = valid_data.iloc[:, 0].sum()
-    sum_next = valid_data.iloc[:, 1].sum()
-    factor = sum_next / sum_current
-    factors.append(factor)
+  # Only look at rows with complete data
+  valid_data = pd.concat([col_current, col_next], axis=1).dropna()
+  sum_current = valid_data.iloc[:, 0].sum()
+  sum_next = valid_data.iloc[:, 1].sum()
+  factor = sum_next / sum_current
+  factors.append(factor)
 
 print("\nAge-to-Age Development Factors (Link Ratios):")
 for idx, f in enumerate(factors, start=1):
-    print(f"Lag {idx} to Lag {idx+1}: {f:.4f}")
+  print(f"Lag {idx} to Lag {idx+1}: {f:.4f}")
 
 # Calculate age-to-ultimate (cumulative) factors
 # This is calculated from right to left
@@ -49,7 +49,7 @@ ultimate_factors.append(1.0)
 
 print("\nAge-to-Ultimate (Cumulative) Factors:")
 for idx, uf in enumerate(ultimate_factors, start=1):
-    print(f"Lag {idx} to Ultimate: {uf:.4f}")
+  print(f"Lag {idx} to Ultimate: {uf:.4f}")
 
 # Calculate total losses and IBNR
 # Find the latest available (diagonal) paid loss for each accident year
@@ -60,8 +60,20 @@ latest_actuals = paid_triangle.ffill(axis=1).iloc[:, -1]
 n_rows = len(paid_triangle)
 row_ultimate_factors = ultimate_factors[:n_rows]
 
-# Calculate ultimate losses
-ultimate_losses = latest_actuals.values * row_ultimate_factors
+# Standard Chain Ladder Ultimate Losses (kept to establish baseline expected losses)
+standard_ultimate_losses = latest_actuals.values * row_ultimate_factors
+
+# --- BORNGBUETTER-FERGUSON (BF) MODIFICATION ---
+# Calculate Percent Unpaid: 1 - (1 / CDF)
+cdfs = np.array(row_ultimate_factors)
+percent_unpaid = 1.0 - (1.0 / cdfs)
+
+# Establish a priori expected losses using the average standard ultimate loss as a baseline
+avg_expected_loss = np.mean(standard_ultimate_losses)
+expected_losses = np.array([avg_expected_loss] * n_rows)
+
+# BF Ultimate = Latest Paid + (Expected Losses * Percent Unpaid)
+ultimate_losses = latest_actuals.values + (expected_losses * percent_unpaid)
 
 # Create a summary dataframe
 summary_df = pd.DataFrame(
@@ -74,7 +86,7 @@ summary_df = pd.DataFrame(
     }
 )
 
-print("\n--- Final Reserving Summary ---")
+print("\n--- Final Reserving Summary (Bornhuetter-Ferguson) ---")
 print(summary_df.to_string(index=False))
 
 # Total IBNR required across all years
