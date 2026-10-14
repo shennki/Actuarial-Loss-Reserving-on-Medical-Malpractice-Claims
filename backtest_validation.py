@@ -48,24 +48,26 @@ ultimate_factors.append(1.0)
 latest_actuals_trunc = truncated_triangle.ffill(axis=1).iloc[:, -1]
 n_actuals = len(latest_actuals_trunc)
 
-if len(ultimate_factors) >= n_actuals:
-  row_ultimate_factors = ultimate_factors[:n_actuals]
-else:
-  row_ultimate_factors = ultimate_factors + [1.0] * (
-      n_actuals - len(ultimate_factors)
-  )
+# Map ultimate factors based on each row's actual development lag
+row_lags = truncated_triangle.notna().sum(axis=1).values
+row_ultimate_factors = []
+for lag in row_lags:
+  idx = int(lag) - 1
+  if idx < len(ultimate_factors):
+    row_ultimate_factors.append(ultimate_factors[idx])
+  else:
+    row_ultimate_factors.append(1.0)
+row_ultimate_factors = np.array(row_ultimate_factors)
 
 # Standard Chain Ladder Projections
-cl_projected_ultimates = latest_actuals_trunc.values * np.array(
-    row_ultimate_factors
-)
+cl_projected_ultimates = latest_actuals_trunc.values * row_ultimate_factors
 
 # Implement Bornhuetter-Ferguson (BF)
 actual_ultimates = full_triangle.iloc[:, -1].values
 avg_expected_loss = np.mean(actual_ultimates)
 expected_losses = np.array([avg_expected_loss] * n_actuals)
 
-cdfs = np.array(row_ultimate_factors)
+cdfs = row_ultimate_factors
 percent_unpaid = 1.0 - (1.0 / cdfs)
 
 # BF Ultimate = Latest Paid + (Expected Losses * Percent Unpaid)
