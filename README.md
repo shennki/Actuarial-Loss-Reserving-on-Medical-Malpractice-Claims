@@ -32,3 +32,12 @@ python backtest_validation.py
 Limitations and Future Improvements:
 1. The dataset is constrained to 10 development lags, requiring the model to assume zero claim activity past year 10 (a 1.0 tail factor). In real-world MedMal insurance, liabilities frequently extend beyond 10 years. A production extension would incorporate tail-factor curve fitting, such as an inverse power curve.
 2. Multi-Company Automation: The current scripts process a single company code; future iterations can scale via a loop to process all entities in the dataset for portfolio-wide aggregation.
+
+##
+
+Key Results & Findings:
+
+* **Chain Ladder Instability:** Standard Chain Ladder exhibited extreme under-projection errors (exceeding $-50\%$) in recent, sparse accident years (Lags 1–3) due to high leverage on initial payments.
+* **Bornhuetter-Ferguson Stabilization:** Applying the BF method successfully stabilized projections in recent years, reducing error and preventing extreme reserve underestimation.
+
+##
