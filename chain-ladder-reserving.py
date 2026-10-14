@@ -38,7 +38,7 @@ print("\nAge-to-Age Development Factors (Link Ratios):")
 for idx, f in enumerate(factors, start=1):
     print(f"Lag {idx} to Lag {idx+1}: {f:.4f}")
 
-# Calculate age-to-ultimate (cumulitive) factors
+# Calculate age-to-ultimate (cumulative) factors
 # This is calculated from right to left
 rev_factors = list(reversed(factors))
 cum_rev = np.cumprod(rev_factors)

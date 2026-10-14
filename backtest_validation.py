@@ -4,7 +4,7 @@ import pandas as pd
 df = pd.read_csv("medmal_pos_98-07.csv")
 df.columns = df.columns.str.strip()
 
-# Iolsate a single company code
+# Isolate a single company code
 company_code = 683
 company_data = df[df["GRCODE"] == company_code]
 
@@ -19,7 +19,7 @@ eval_lag = 5
 truncated_triangle = full_triangle.iloc[:, :eval_lag]
 
 print(f"--- Backtesting Model for Company {company_code} ---")
-print(f"Pretending we only have data up to Development Lag {eval_lag}:\n")
+print(f"After cutting off data up to Development Lag {eval_lag}:\n")
 print(truncated_triangle)
 
 # Run chain ladder on the TRUNCATED triangle
@@ -81,7 +81,7 @@ for col in dollar_cols:
   validation_df[col] = validation_df[col].map("${:,.2f}".format)
 validation_df["Error (%)"] = validation_df["Error (%)"].map("{:,.2f}%".format)
 
-# Row-by-row print fromatting
+# Row-by-row print formatting
 print("\n--- Model Validation Scorecard ---")
 for _, row in validation_df.iterrows():
   print(f"\nAccident Year          : {int(row['Accident Year'])}")
